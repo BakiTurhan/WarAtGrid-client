@@ -74,6 +74,26 @@ class Player extends CircleComponent with KeyboardHandler, HasGameRef<FlameGame>
   
   void addScore(int points) { score += points; }
 
+  // Mobile Input
+  Vector2 _mobileInput = Vector2.zero();
+  
+  /// Set movement from mobile joystick (dx, dy are -1 to 1)
+  void setMobileMovement(double dx, double dy) {
+    _mobileInput = Vector2(dx, dy);
+    velocity = _mobileInput * cfg.playerSpeed;
+    
+    // Update facing direction if moving
+    if (!_mobileInput.isZero()) {
+      angle = atan2(dy, dx);
+    }
+  }
+  
+  /// Toggle between gun and knife mode
+  void toggleWeaponMode() {
+    weaponMode = weaponMode == WeaponMode.gun ? WeaponMode.knife : WeaponMode.gun;
+    _updateWeaponVisuals();
+  }
+
   @override
   Future<void> onLoad() async {
     await super.onLoad();
@@ -335,7 +355,7 @@ class Player extends CircleComponent with KeyboardHandler, HasGameRef<FlameGame>
     _reloadTimer = 0;
   }
 
-  void _dash() {
+  void dash() {
     if (_dashCooldownTimer > 0 || _isDashing) return;
     if (!velocity.isZero()) {
       _dashDirection = velocity.normalized();
@@ -370,7 +390,7 @@ class Player extends CircleComponent with KeyboardHandler, HasGameRef<FlameGame>
     // SPACE = Dash (only knife mode)
     if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.space) {
       if (weaponMode == WeaponMode.knife) {
-        _dash();
+        dash();
       }
     }
     

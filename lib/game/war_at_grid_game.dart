@@ -10,11 +10,15 @@ import 'components/enemy.dart';
 import 'components/world.dart';
 import 'components/fog_of_war.dart';
 import '../config.dart';
+import '../network/network_manager.dart';
 
 class WarAtGridGame extends FlameGame with HasKeyboardHandlerComponents, MouseMovementDetector, TapDetector, SecondaryTapDetector, PanDetector {
   final VoidCallback? onPauseToggle;
+  final NetworkManager? networkManager;
   
-  WarAtGridGame({this.onPauseToggle});
+  WarAtGridGame({this.onPauseToggle, this.networkManager});
+  
+  bool get isOnlineMode => networkManager != null;
 
   final Player player = Player();
   late GameWorld gameWorld;

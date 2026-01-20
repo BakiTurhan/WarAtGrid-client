@@ -8,6 +8,7 @@ import 'overlays/game_over.dart';
 import 'overlays/pause_menu.dart';
 import 'screens/menu_screen.dart';
 import 'screens/settings_screen.dart';
+import 'network/network_manager.dart';
 
 void main() {
   runApp(const WarAtGridApp());
@@ -40,12 +41,43 @@ class _MainNavigatorState extends State<MainNavigator> {
   AppState _appState = AppState.menu;
   WarAtGridGame? _game;
   int _finalScore = 0;
+  final NetworkManager _networkManager = NetworkManager();
+  bool _isOnlineMode = false;
 
   void _startGame() {
     setState(() {
+      _isOnlineMode = false;
       _game = WarAtGridGame(onPauseToggle: _togglePause);
       _appState = AppState.playing;
     });
+  }
+  
+  Future<void> _startMultiplayer(String serverIp) async {
+    // Sunucuya bağlan
+    final success = await _networkManager.connect(serverIp);
+    
+    if (!success) {
+      // Bağlantı başarısız
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Sunucuya bağlanılamadı!'), backgroundColor: Colors.red),
+        );
+      }
+      return;
+    }
+    
+    // Oyunu başlat
+    setState(() {
+      _isOnlineMode = true;
+      _game = WarAtGridGame(
+        onPauseToggle: _togglePause,
+        networkManager: _networkManager,
+      );
+      _appState = AppState.playing;
+    });
+    
+    // Sunucuya katılma mesajı gönder
+    _networkManager.sendJoin('Oyuncu');
   }
   
   void _togglePause() {
@@ -99,7 +131,10 @@ class _MainNavigatorState extends State<MainNavigator> {
   Widget build(BuildContext context) {
     switch (_appState) {
       case AppState.menu:
-        return MenuScreen(onPlay: _startGame);
+        return MenuScreen(
+          onPlay: _startGame,
+          onMultiplayer: _startMultiplayer,
+        );
         
       case AppState.settings:
         return SettingsScreen(onBack: _closeSettings);

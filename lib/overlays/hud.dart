@@ -1,7 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import '../game/war_at_grid_game.dart';
 import '../game/components/player.dart';
 import '../config.dart';
+import 'touch_controls.dart';
+
+/// Check if running on mobile platform
+bool get isMobile {
+  if (kIsWeb) return false;
+  return defaultTargetPlatform == TargetPlatform.android ||
+         defaultTargetPlatform == TargetPlatform.iOS;
+}
 
 class HudOverlay extends StatelessWidget {
   final WarAtGridGame game;
@@ -9,34 +18,64 @@ class HudOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Column(
+    return Stack(
+      children: [
+        // HUD info at top
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHealthBar(),
-              const SizedBox(height: 8),
-              _buildAmmoDisplay(),
-              const SizedBox(height: 8),
-              _buildDashCooldown(),
-              const SizedBox(height: 4),
-              _buildGrenadeCooldown(),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHealthBar(),
+                  const SizedBox(height: 8),
+                  _buildAmmoDisplay(),
+                  const SizedBox(height: 8),
+                  _buildDashCooldown(),
+                  const SizedBox(height: 4),
+                  _buildGrenadeCooldown(),
+                ],
+              ),
+              const Spacer(),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  _buildWeaponMode(),
+                  const SizedBox(height: 8),
+                  _buildScore(),
+                ],
+              ),
             ],
           ),
-          const Spacer(),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              _buildWeaponMode(),
-              const SizedBox(height: 8),
-              _buildScore(),
-            ],
+        ),
+        
+        // Pause button for mobile (top-right)
+        if (isMobile)
+          Positioned(
+            top: 16,
+            right: 16,
+            child: GestureDetector(
+              onTap: () {
+                game.onPauseToggle?.call();
+              },
+              child: Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.5),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white24),
+                ),
+                child: const Icon(Icons.pause, color: Colors.white, size: 24),
+              ),
+            ),
           ),
-        ],
-      ),
+        
+        // Touch controls for mobile
+        if (isMobile) TouchControls(game: game),
+      ],
     );
   }
 
@@ -114,3 +153,4 @@ class HudOverlay extends StatelessWidget {
     ]);
   }
 }
+

@@ -1,71 +1,173 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-class MenuScreen extends StatelessWidget {
+class MenuScreen extends StatefulWidget {
   final VoidCallback onPlay;
+  final void Function(String serverIp)? onMultiplayer;
 
-  const MenuScreen({super.key, required this.onPlay});
+  const MenuScreen({super.key, required this.onPlay, this.onMultiplayer});
+
+  @override
+  State<MenuScreen> createState() => _MenuScreenState();
+}
+
+class _MenuScreenState extends State<MenuScreen> {
+  bool _showIpInput = false;
+  final _ipController = TextEditingController(text: 'localhost');
+
+  @override
+  void dispose() {
+    _ipController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Colors.grey.shade900,
-            Colors.black,
-          ],
+    return Material(
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.grey.shade900,
+              Colors.black,
+            ],
+          ),
+        ),
+        child: Center(
+          child: _showIpInput ? _buildIpInputScreen() : _buildMainMenu(),
         ),
       ),
-      child: Center(
-        child: Column(
+    );
+  }
+
+  Widget _buildMainMenu() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // Title
+        const Text(
+          'WAR AT GRID',
+          style: TextStyle(
+            fontSize: 64,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            letterSpacing: 8,
+            shadows: [
+              Shadow(
+                blurRadius: 20,
+                color: Colors.cyan,
+                offset: Offset(0, 0),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        const Text(
+          'Survive the Grid',
+          style: TextStyle(
+            fontSize: 18,
+            color: Colors.white54,
+            letterSpacing: 4,
+          ),
+        ),
+        const SizedBox(height: 80),
+        
+        // Single Player Button
+        _MenuButton(
+          label: 'TEK OYUNCU',
+          color: Colors.cyan,
+          onTap: widget.onPlay,
+        ),
+        const SizedBox(height: 20),
+        
+        // Multiplayer Button
+        if (widget.onMultiplayer != null)
+          _MenuButton(
+            label: 'ÇOK OYUNCU',
+            color: Colors.green,
+            onTap: () => setState(() => _showIpInput = true),
+          ),
+        if (widget.onMultiplayer != null)
+          const SizedBox(height: 20),
+        
+        // Quit Button
+        _MenuButton(
+          label: 'ÇIKIŞ',
+          color: Colors.red.shade400,
+          onTap: () => SystemNavigator.pop(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildIpInputScreen() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Text(
+          'SUNUCU BAĞLANTISI',
+          style: TextStyle(
+            fontSize: 32,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            letterSpacing: 4,
+          ),
+        ),
+        const SizedBox(height: 40),
+        
+        // IP Input Field
+        SizedBox(
+          width: 300,
+          child: TextField(
+            controller: _ipController,
+            style: const TextStyle(color: Colors.white, fontSize: 18),
+            decoration: InputDecoration(
+              labelText: 'Sunucu IP',
+              labelStyle: const TextStyle(color: Colors.white54),
+              hintText: 'örn: 192.168.1.5',
+              hintStyle: const TextStyle(color: Colors.white24),
+              enabledBorder: OutlineInputBorder(
+                borderSide: const BorderSide(color: Colors.green),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderSide: const BorderSide(color: Colors.green, width: 2),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              filled: true,
+              fillColor: Colors.black54,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        const SizedBox(height: 30),
+        
+        Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Title
-            const Text(
-              'WAR AT GRID',
-              style: TextStyle(
-                fontSize: 64,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                letterSpacing: 8,
-                shadows: [
-                  Shadow(
-                    blurRadius: 20,
-                    color: Colors.cyan,
-                    offset: Offset(0, 0),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Survive the Grid',
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.white54,
-                letterSpacing: 4,
-              ),
-            ),
-            const SizedBox(height: 80),
-            // Play Button
+            // Back Button
             _MenuButton(
-              label: 'PLAY',
-              color: Colors.cyan,
-              onTap: onPlay,
+              label: 'GERİ',
+              color: Colors.grey,
+              onTap: () => setState(() => _showIpInput = false),
             ),
-            const SizedBox(height: 20),
-            // Quit Button
+            const SizedBox(width: 20),
+            // Connect Button
             _MenuButton(
-              label: 'QUIT',
-              color: Colors.red.shade400,
-              onTap: () => SystemNavigator.pop(),
+              label: 'BAĞLAN',
+              color: Colors.green,
+              onTap: () {
+                final ip = _ipController.text.trim();
+                if (ip.isNotEmpty) {
+                  widget.onMultiplayer?.call(ip);
+                }
+              },
             ),
           ],
         ),
-      ),
+      ],
     );
   }
 }
