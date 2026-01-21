@@ -52,12 +52,17 @@ class _MainNavigatorState extends State<MainNavigator> {
     });
   }
   
-  Future<void> _startMultiplayer(String serverIp) async {
+  @override
+  void dispose() {
+    _networkManager.dispose();
+    super.dispose();
+  }
+  
+  Future<void> _startMultiplayer(String serverIp, String playerName) async {
     // Sunucuya bağlan
     final success = await _networkManager.connect(serverIp);
     
     if (!success) {
-      // Bağlantı başarısız
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Sunucuya bağlanılamadı!'), backgroundColor: Colors.red),
@@ -77,7 +82,7 @@ class _MainNavigatorState extends State<MainNavigator> {
     });
     
     // Sunucuya katılma mesajı gönder
-    _networkManager.sendJoin('Oyuncu');
+    _networkManager.sendJoin(playerName);
   }
   
   void _togglePause() {
@@ -89,6 +94,7 @@ class _MainNavigatorState extends State<MainNavigator> {
   }
 
   void _pauseGame() {
+    _game?.onGamePaused();
     setState(() => _appState = AppState.paused);
     _game?.paused = true;
   }
@@ -99,6 +105,7 @@ class _MainNavigatorState extends State<MainNavigator> {
   }
 
   void _openSettings() {
+    _game?.onGamePaused();
     setState(() => _appState = AppState.settings);
   }
 
@@ -107,6 +114,12 @@ class _MainNavigatorState extends State<MainNavigator> {
   }
 
   void _quitToMenu() {
+    // Disconnect from server if in online mode
+    if (_isOnlineMode) {
+      _networkManager.disconnect();
+      _isOnlineMode = false;
+    }
+    
     setState(() {
       _game = null;
       _appState = AppState.menu;

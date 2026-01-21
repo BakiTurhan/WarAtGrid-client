@@ -77,6 +77,9 @@ class Player extends CircleComponent with KeyboardHandler, HasGameRef<FlameGame>
   // Mobile Input
   Vector2 _mobileInput = Vector2.zero();
   
+  // Network callback for shooting
+  VoidCallback? onShoot;
+  
   /// Set movement from mobile joystick (dx, dy are -1 to 1)
   void setMobileMovement(double dx, double dy) {
     _mobileInput = Vector2(dx, dy);
@@ -347,6 +350,9 @@ class Player extends CircleComponent with KeyboardHandler, HasGameRef<FlameGame>
     
     _currentAmmo--;
     if (_currentAmmo <= 0) _startReload();
+    
+    // Notify network about shoot action
+    onShoot?.call();
   }
 
   void _startReload() {

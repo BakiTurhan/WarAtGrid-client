@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 
 class MenuScreen extends StatefulWidget {
   final VoidCallback onPlay;
-  final void Function(String serverIp)? onMultiplayer;
+  final void Function(String serverIp, String playerName)? onMultiplayer;
 
   const MenuScreen({super.key, required this.onPlay, this.onMultiplayer});
 
@@ -14,10 +14,12 @@ class MenuScreen extends StatefulWidget {
 class _MenuScreenState extends State<MenuScreen> {
   bool _showIpInput = false;
   final _ipController = TextEditingController(text: 'localhost');
+  final _nameController = TextEditingController(text: 'Oyuncu');
 
   @override
   void dispose() {
     _ipController.dispose();
+    _nameController.dispose();
     super.dispose();
   }
 
@@ -117,6 +119,33 @@ class _MenuScreenState extends State<MenuScreen> {
         ),
         const SizedBox(height: 40),
         
+        // Name Input Field
+        SizedBox(
+          width: 300,
+          child: TextField(
+            controller: _nameController,
+            style: const TextStyle(color: Colors.white, fontSize: 18),
+            decoration: InputDecoration(
+              labelText: 'Oyuncu Adı',
+              labelStyle: const TextStyle(color: Colors.white54),
+              hintText: 'İsmini yaz',
+              hintStyle: const TextStyle(color: Colors.white24),
+              enabledBorder: OutlineInputBorder(
+                borderSide: const BorderSide(color: Colors.cyan),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderSide: const BorderSide(color: Colors.cyan, width: 2),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              filled: true,
+              fillColor: Colors.black54,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        const SizedBox(height: 20),
+        
         // IP Input Field
         SizedBox(
           width: 300,
@@ -160,8 +189,9 @@ class _MenuScreenState extends State<MenuScreen> {
               color: Colors.green,
               onTap: () {
                 final ip = _ipController.text.trim();
-                if (ip.isNotEmpty) {
-                  widget.onMultiplayer?.call(ip);
+                final name = _nameController.text.trim();
+                if (ip.isNotEmpty && name.isNotEmpty) {
+                  widget.onMultiplayer?.call(ip, name);
                 }
               },
             ),

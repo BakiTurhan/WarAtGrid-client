@@ -11,6 +11,10 @@ class NetworkManager {
   bool _isConnected = false;
   bool get isConnected => _isConnected;
   
+  // Local Player ID captured from welcome message
+  String? _localPlayerId;
+  String? get localPlayerId => _localPlayerId;
+  
   // State updates stream controller
   final _stateController = StreamController<Map<String, dynamic>>.broadcast();
   Stream<Map<String, dynamic>> get stateStream => _stateController.stream;
@@ -38,6 +42,14 @@ class NetworkManager {
         (data) {
           try {
             final message = jsonDecode(data as String) as Map<String, dynamic>;
+            
+            // ID'yi sakla
+            if (message['type'] == 'welcome') {
+               final payload = message['payload'] as Map<String, dynamic>;
+               _localPlayerId = payload['id'] as String;
+               print("NetworkManager: Captured Local ID: $_localPlayerId");
+            }
+            
             _stateController.add(message);
           } catch (e) {
             // JSON parse hatası, yoksay
@@ -79,6 +91,11 @@ class NetworkManager {
         'actions': actions,
       },
     };
+    
+    // Log movement/action
+    if (dx != 0 || dy != 0 || actions.isNotEmpty) {
+       print("NET_DEBUG: Sending Input (dx: $dx, dy: $dy, acts: $actions)");
+    }
     
     _channel!.sink.add(jsonEncode(message));
   }
